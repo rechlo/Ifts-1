@@ -63,7 +63,7 @@ void loop() {
   lcd.print("                ");
   //lcd.clear();
   lcd.setCursor(posizione, 0);
-  lcd.print("Hello");
+  lcd.print("Ciao");
   lcd.setCursor(0, 1);
   // print the number of seconds since reset:
   lcd.print(millis() / 1000);
@@ -73,7 +73,7 @@ void loop() {
     posizione = posizione + incremento;
     if ( posizione == 0) {
       incremento = 1;
-    } else if (posizione == 11) {
+    } else if (posizione == 12) {
       incremento = -1;
     }
   }

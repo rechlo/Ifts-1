@@ -48,13 +48,18 @@ const int buttonPin2 = 4;     // the number of the pushbutton pin
 int buttonState1 = 0;         // variable for reading the pushbutton status
 int buttonState2 = 0;         // variable for reading the pushbutton status
 
+int oldbuttonState1 = 1;         // variable for reading the pushbutton status
+int oldbuttonState2 = 1;         // variable for reading the pushbutton status
+unsigned long lastButtonPressed;
+
 // imposta la soglia standard
 float soglia = 26;
 #define soglia_max 35
 #define soglia_min 5
-
 // imposta l'isteresi
 #define isteresi 1.0
+// imposta la calibrazione del sensore di temperatura
+float correzione = -1;
 
 // include the library code:
 #include <LiquidCrystal.h>
@@ -109,22 +114,31 @@ void loop() {
   // print the number of seconds since reset:
   //lcd.print(millis() / 1000);
 
+  buttonState1 = digitalRead(buttonPin1);
+  buttonState2 = digitalRead(buttonPin2);
 
+  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  if (buttonState1 == LOW && soglia < soglia_max && oldbuttonState1 == HIGH && millis() > (lastButtonPressed + 100)) {
+    // aumenta la soglia;
+    soglia = soglia + .1;
+    oldbuttonState1 = buttonState1;
+    //lastButtonPressed = millis();
+  } else if ( buttonState1 == HIGH && oldbuttonState1 == LOW) {
+    oldbuttonState1 = HIGH;
+    lastButtonPressed = millis();
+  }
+
+  if ( buttonState2 == LOW && soglia > soglia_min && oldbuttonState2 == HIGH && millis() > (lastButtonPressed + 100)) {
+    // diminuisce la soglia;
+    soglia = soglia - .1;
+    oldbuttonState2 = buttonState2;
+    //lastButtonPressed = millis();
+  } else if ( buttonState2 == HIGH && oldbuttonState2 == LOW ) {
+    oldbuttonState2 = HIGH;
+    lastButtonPressed = millis();
+  }
 
   if ((millis() - tempo) > 500) {
-
-    buttonState1 = digitalRead(buttonPin1);
-    buttonState2 = digitalRead(buttonPin2);
-
-    // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-    if (buttonState1 == LOW && soglia < soglia_max ) {
-      // aumenta la soglia;
-      soglia = soglia + .5;
-    } else if ( buttonState2 == LOW && soglia > soglia_min) {
-      // diminuisce la soglia;
-      soglia = soglia - .5;
-    }
-
     tempo = millis();
     lcd.setCursor(0, 1);
     // Reading temperature or humidity takes about 250 milliseconds!
@@ -132,6 +146,7 @@ void loop() {
     int h = dht.readHumidity();
     // Read temperature as Celsius (the default)
     float t = dht.readTemperature();
+    t = t + correzione;
     lcd.print("H:");
     lcd.print(h);
     lcd.setCursor(6, 1);
@@ -145,11 +160,11 @@ void loop() {
       lcd.print("on ");
       digitalWrite(LED_BUILTIN, HIGH);
     }
-    lcd.setCursor(8, 0);
-    lcd.print(soglia,1);
-    lcd.print(" ");
     //Serial.print(h);
     //Serial.print("\t");
     //Serial.println(t);
   }
+  lcd.setCursor(8, 0);
+  lcd.print(soglia, 1);
+  lcd.print(" ");
 }
